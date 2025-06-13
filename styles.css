@@ -5,6 +5,16 @@
     font-family: 'Courier New', Courier, monospace;
 }
 
+/* Hide any code blocks */
+pre, code, script {
+    display: none !important;
+}
+
+/* Hide any text content that might contain code */
+.hidden-code {
+    display: none !important;
+}
+
 body {
     padding: 20px;
     background-color: #f5f5f5;
