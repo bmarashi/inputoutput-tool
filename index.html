@@ -63,37 +63,109 @@
             loadPosts();
         };
 
+        // Get GitHub file content
+        async function getGitHubFileContent() {
+            try {
+                console.log('Fetching posts from GitHub...');
+                const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    console.error('GitHub API response:', response.status, response.statusText);
+                    if (response.status === 404) {
+                        // File doesn't exist yet, create it
+                        console.log('Creating new posts file...');
+                        const createResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `token ${GITHUB_TOKEN}`,
+                                'Accept': 'application/vnd.github.v3+json'
+                            },
+                            body: JSON.stringify({
+                                message: 'Create posts file',
+                                content: btoa(JSON.stringify([])),
+                                sha: '0000000000000000000000000000000000000000'
+                            })
+                        });
+                        
+                        if (!createResponse.ok) {
+                            console.error('Failed to create file:', createResponse.status, await createResponse.text());
+                            throw new Error('Failed to create posts file');
+                        }
+                        return [];
+                    } else {
+                        throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+                    }
+                }
+                
+                const data = await response.json();
+                console.log('GitHub API response data:', data);
+                
+                if (data.content) {
+                    const posts = JSON.parse(atob(data.content));
+                    console.log('Loaded posts:', posts);
+                    return posts;
+                } else {
+                    console.error('No content in response:', data);
+                    return [];
+                }
+            } catch (error) {
+                console.error('Error getting posts:', error);
+                throw error;
+            }
+        }
+
         // Handle post button click
-        postButton.addEventListener('click', function() {
+        postButton.addEventListener('click', async function() {
             const title = titleInput.value.trim();
             const content = postInput.value.trim();
 
             if (title && content) {
-                // Send post to server
-                fetch('/api/posts', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ title, content })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                try {
+                    // Get existing posts
+                    const posts = await getGitHubFileContent();
+                    
+                    // Add new post
+                    const newPost = {
+                        title,
+                        content,
+                        date: new Date().toISOString()
+                    };
+                    posts.push(newPost);
+                    
+                    // Update GitHub file
+                    const updateResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${GITHUB_TOKEN}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        },
+                        body: JSON.stringify({
+                            message: `Update posts file with new post: ${title}`,
+                            content: btoa(JSON.stringify(posts)),
+                            sha: '0000000000000000000000000000000000000000'
+                        })
+                    });
+                    
+                    if (!updateResponse.ok) {
+                        console.error('Failed to update file:', updateResponse.status, await updateResponse.text());
+                        throw new Error('Failed to update posts file');
                     }
-                    return response.json();
-                })
-                .then(data => {
+                    
                     // Clear inputs
                     titleInput.value = '';
                     postInput.value = '';
+                    
                     // Update display
                     loadPosts();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
+                } catch (error) {
+                    console.error('Error posting:', error);
                     alert('Failed to post. Please try again.');
-                });
+                }
             }
         });
 
