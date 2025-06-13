@@ -203,7 +203,8 @@
 
             // Load posts function
             function loadPosts() {
-                getGitHubFileContent().then(posts => {
+                getGitHubFileContent().then(result => {
+                    const posts = result.posts || [];
                     postsSection.innerHTML = '';
                     posts.forEach(post => {
                         const postElement = document.createElement('div');
