@@ -290,17 +290,27 @@
             }
         }
 
-        // Clear posts and initialize the app
-        async function clearAndInit() {
-            try {
-                await clearPosts();
-                initApp();
-            } catch (error) {
-                console.error('Error clearing posts:', error);
-                alert('Failed to clear posts. Please try again.');
+        // Initialize the app
+        initApp();
+
+        // Add clear posts button
+        const clearButton = document.createElement('button');
+        clearButton.textContent = 'Clear All Posts';
+        clearButton.style.cssText = 'margin: 10px 0; padding: 8px; background: #ff4444; color: white; border: none; cursor: pointer;';
+        document.body.insertBefore(clearButton, postsSection);
+        
+        clearButton.addEventListener('click', async function() {
+            if (confirm('Are you sure you want to delete ALL posts? This cannot be undone.')) {
+                try {
+                    await clearPosts();
+                    loadPosts();
+                    alert('All posts have been cleared.');
+                } catch (error) {
+                    console.error('Error clearing posts:', error);
+                    alert('Failed to clear posts. Please try again.');
+                }
             }
-        }
-        clearAndInit();
+        });
     </script>
 </body>
 </html>
