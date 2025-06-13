@@ -55,6 +55,11 @@
                 return;
             }
 
+            // Only initialize if we have a token
+            if (!GITHUB_TOKEN) {
+                return;
+            }
+
             // Get references to DOM elements
             const titleInput = document.getElementById('titleInput');
             const postInput = document.getElementById('postInput');
