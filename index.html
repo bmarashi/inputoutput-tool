@@ -84,47 +84,35 @@
                     
                     if (!response.ok) {
                         console.error('GitHub API response:', response.status, response.statusText);
-                        if (response.status === 404) {
-                            // File doesn't exist yet, create it
-                            console.log('Creating new posts file...');
-                            const createResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
-                                method: 'PUT',
-                                headers: {
-                                    'Authorization': `token ${GITHUB_TOKEN}`,
-                                    'Accept': 'application/vnd.github.v3+json'
-                                },
-                                body: JSON.stringify({
-                                    message: 'Create posts file',
-                                    content: btoa(JSON.stringify([])),
-                                    sha: '0000000000000000000000000000000000000000'
-                                })
-                            });
-                            
-                            if (!createResponse.ok) {
-                                console.error('Failed to create file:', createResponse.status, await createResponse.text());
-                                throw new Error('Failed to create posts file');
-                            }
-                            return [];
-                        } else {
-                            throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
-                        }
+                        const errorText = await response.text();
+                        console.error('Error details:', errorText);
+                        throw new Error(`GitHub API error: ${response.status} ${response.statusText}\nDetails: ${errorText}`);
                     }
                     
                     const data = await response.json();
                     console.log('GitHub API response data:', data);
                     
                     if (data.content) {
-                        const posts = JSON.parse(atob(data.content));
-                        console.log('Loaded posts:', posts);
-                        return {
-                            posts: posts,
-                            sha: data.sha
-                        };
+                        try {
+                            const posts = JSON.parse(atob(data.content));
+                            console.log('Loaded posts:', posts);
+                            return {
+                                posts: posts,
+                                sha: data.sha
+                            };
+                        } catch (parseError) {
+                            console.error('Error parsing posts JSON:', parseError);
+                            console.error('Raw content:', data.content);
+                            return {
+                                posts: [],
+                                sha: data.sha
+                            };
+                        }
                     } else {
                         console.error('No content in response:', data);
                         return {
                             posts: [],
-                            sha: '0000000000000000000000000000000000000000'
+                            sha: data.sha || '0000000000000000000000000000000000000000'
                         };
                     }
                 } catch (error) {
@@ -160,10 +148,17 @@
                         
                         console.log('Updated posts:', posts);
                         
+                        // Convert posts to JSON string and encode
+                        const postsJson = JSON.stringify(posts);
+                        const encodedContent = btoa(unescape(encodeURIComponent(postsJson)));
+                        
+                        console.log('Posts JSON:', postsJson);
+                        console.log('Encoded content:', encodedContent);
+                        
                         // Update GitHub file with correct SHA
                         const requestData = {
                             message: `Update posts file with new post: ${title}`,
-                            content: btoa(JSON.stringify(posts)),
+                            content: encodedContent,
                             sha: fileSHA
                         };
                         
@@ -195,6 +190,7 @@
                         loadPosts();
                     } catch (error) {
                         console.error('Error posting:', error);
+                        console.error('Error stack:', error.stack);
                         alert('Failed to post. Please check the browser console for more details.');
                     }
                 }
