@@ -3,61 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Blog</title>
-    <style>
-        /* Basic styling for the app */
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .container {
-            margin: 0 auto;
-            max-width: 800px;
-        }
-        
-        .post-form {
-            margin-bottom: 20px;
-        }
-        
-        .post {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-        }
-        
-        .date {
-            color: #666;
-            font-size: 0.9em;
-        }
-        
-        .post-content {
-            margin-top: 10px;
-        }
-        
-        /* Hide any code blocks */
-        pre, code, script {
-            display: none !important;
-        }
-        
-        /* Hide any text content that might contain code */
-        .hidden-code {
-            display: none !important;
-        }
-    </style>
+    <title>inputoutput.xyz</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>GitHub Blog</h1>
-        <div class="post-form">
-            <input type="text" id="titleInput" placeholder="Post Title" style="width: 300px; padding: 8px; margin: 10px 0;">
-            <textarea id="postInput" placeholder="Post Content" style="width: 300px; height: 100px; padding: 8px; margin: 10px 0;"></textarea>
-            <button id="postButton" style="padding: 8px 16px; background: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 4px;">Post</button>
+        <h1 class="site-title">inputoutput.xyz</h1>
+        <div class="input-section">
+            <input type="text" id="titleInput" class="title-input" placeholder="Title">
+            <textarea id="postInput" class="post-input" placeholder="Write your post here"></textarea>
+            <div class="button-container">
+                <button id="postButton" class="post-button">Post</button>
+            </div>
         </div>
-        <div id="postsSection"></div>
+        
+        <div id="postsSection" class="posts-section">
+            <!-- Posts will be added here dynamically -->
+        </div>
     </div>
     <script>
         // Global variables
