@@ -116,10 +116,16 @@
                     if (data.content) {
                         const posts = JSON.parse(atob(data.content));
                         console.log('Loaded posts:', posts);
-                        return posts;
+                        return {
+                            posts: posts,
+                            sha: data.sha
+                        };
                     } else {
                         console.error('No content in response:', data);
-                        return [];
+                        return {
+                            posts: [],
+                            sha: '0000000000000000000000000000000000000000'
+                        };
                     }
                 } catch (error) {
                     console.error('Error getting posts:', error);
@@ -134,8 +140,10 @@
 
                 if (title && content) {
                     try {
-                        // Get existing posts
-                        const posts = await getGitHubFileContent();
+                        // Get existing posts and file SHA
+                        const result = await getGitHubFileContent();
+                        const posts = result.posts;
+                        const fileSHA = result.sha;
                         
                         // Add new post
                         const newPost = {
@@ -145,7 +153,7 @@
                         };
                         posts.push(newPost);
                         
-                        // Update GitHub file
+                        // Update GitHub file with correct SHA
                         const updateResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
                             method: 'PUT',
                             headers: {
@@ -155,7 +163,7 @@
                             body: JSON.stringify({
                                 message: `Update posts file with new post: ${title}`,
                                 content: btoa(JSON.stringify(posts)),
-                                sha: '0000000000000000000000000000000000000000'
+                                sha: fileSHA
                             })
                         });
                         
