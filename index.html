@@ -140,10 +140,15 @@
 
                 if (title && content) {
                     try {
+                        console.log('Attempting to post new entry:', { title, content });
+                        
                         // Get existing posts and file SHA
                         const result = await getGitHubFileContent();
                         const posts = result.posts;
                         const fileSHA = result.sha;
+                        
+                        console.log('Current posts:', posts);
+                        console.log('File SHA:', fileSHA);
                         
                         // Add new post
                         const newPost = {
@@ -153,23 +158,33 @@
                         };
                         posts.push(newPost);
                         
+                        console.log('Updated posts:', posts);
+                        
                         // Update GitHub file with correct SHA
+                        const requestData = {
+                            message: `Update posts file with new post: ${title}`,
+                            content: btoa(JSON.stringify(posts)),
+                            sha: fileSHA
+                        };
+                        
+                        console.log('Request data:', requestData);
+                        
                         const updateResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
                             method: 'PUT',
                             headers: {
                                 'Authorization': `token ${GITHUB_TOKEN}`,
                                 'Accept': 'application/vnd.github.v3+json'
                             },
-                            body: JSON.stringify({
-                                message: `Update posts file with new post: ${title}`,
-                                content: btoa(JSON.stringify(posts)),
-                                sha: fileSHA
-                            })
+                            body: JSON.stringify(requestData)
                         });
                         
+                        console.log('Update response status:', updateResponse.status);
+                        const updateResponseText = await updateResponse.text();
+                        console.log('Update response text:', updateResponseText);
+                        
                         if (!updateResponse.ok) {
-                            console.error('Failed to update file:', updateResponse.status, await updateResponse.text());
-                            throw new Error('Failed to update posts file');
+                            console.error('Failed to update file:', updateResponse.status, updateResponseText);
+                            throw new Error(`Failed to update posts file: ${updateResponseText}`);
                         }
                         
                         // Clear inputs
@@ -180,7 +195,7 @@
                         loadPosts();
                     } catch (error) {
                         console.error('Error posting:', error);
-                        alert('Failed to post. Please try again.');
+                        alert('Failed to post. Please check the browser console for more details.');
                     }
                 }
             });
