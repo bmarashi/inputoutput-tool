@@ -71,7 +71,7 @@
             const REPO_NAME = 'inputoutput-tool';
             const FILE_PATH = 'posts.json';
 
-            // Clear posts function
+            // Clear posts function (one-time use)
             async function clearPosts() {
                 try {
                     console.log('Clearing posts...');
@@ -137,6 +137,13 @@
                     throw error;
                 }
             }
+
+            // Clear posts one time
+            clearPosts().then(() => {
+                console.log('Posts cleared successfully');
+            }).catch(error => {
+                console.error('Failed to clear posts:', error);
+            });
 
             // Get GitHub file content
             async function getGitHubFileContent() {
@@ -300,7 +307,9 @@
                 alert('Failed to clear posts. Please try again.');
             }
         }
-        clearAndInit();
+        
+        // Initialize the app
+        initApp();
     </script>
 </body>
 </html>
