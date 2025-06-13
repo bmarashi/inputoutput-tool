@@ -138,13 +138,13 @@
                         console.log('Current posts:', posts);
                         console.log('File SHA:', fileSHA);
                         
-                        // Add new post
+                        // Add new post at the beginning of the array
                         const newPost = {
                             title,
                             content,
                             date: new Date().toISOString()
                         };
-                        posts.push(newPost);
+                        posts.unshift(newPost);
                         
                         console.log('Updated posts:', posts);
                         
