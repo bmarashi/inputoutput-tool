@@ -23,42 +23,42 @@
     </div>
 
     <script>
-        // Main initialization function
-        async function initApp() {
-            // Check for token first
+        // Global variables
+        let GITHUB_TOKEN = '';
+        
+        // Initialize the app
+        function initApp() {
+            // Check for GitHub token in URL parameter
             const urlParams = new URLSearchParams(window.location.search);
-            const GITHUB_TOKEN = urlParams.get('token');
-
-            if (!GITHUB_TOKEN) {
-                // Create token input form
-                const tokenContainer = document.createElement('div');
-                tokenContainer.className = 'token-container';
-                tokenContainer.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);';
-                tokenContainer.innerHTML = `
+            const token = urlParams.get('token');
+            
+            if (!token) {
+                // Show token input form
+                const tokenForm = document.createElement('div');
+                tokenForm.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000;';
+                
+                const formContent = document.createElement('div');
+                formContent.style.cssText = 'background: white; padding: 20px; border-radius: 10px; text-align: center;';
+                
+                formContent.innerHTML = `
                     <h2>Enter GitHub Token</h2>
-                    <p style="margin-bottom: 10px;">Please provide your GitHub Personal Access Token with repo scope:</p>
-                    <input type="password" id="tokenInput" placeholder="GitHub Token" style="width: 100%; padding: 8px; margin-bottom: 10px;">
-                    <button id="tokenSubmit" style="width: 100%; padding: 8px; background: #808080; color: white; border: none; cursor: pointer;">Submit Token</button>
+                    <p>Please enter your GitHub Personal Access Token (with repo scope):</p>
+                    <input type="password" id="tokenInput" style="width: 300px; padding: 8px; margin: 10px 0;">
+                    <button onclick="handleTokenSubmit()" style="padding: 8px 16px; background: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 4px;">Submit</button>
+                    <p style="color: red;">⚠️ Important: Never share your token publicly!</p>
                 `;
                 
-                document.body.insertBefore(tokenContainer, document.body.firstChild);
+                tokenForm.appendChild(formContent);
+                document.body.appendChild(tokenForm);
                 
-                const tokenSubmit = document.getElementById('tokenSubmit');
-                tokenSubmit.addEventListener('click', () => {
-                    const token = document.getElementById('tokenInput').value;
-                    if (token) {
-                        window.location.href = window.location.pathname + '?token=' + encodeURIComponent(token);
-                    }
-                });
+                // Focus on token input
+                document.getElementById('tokenInput').focus();
                 
-                // Early return to prevent further initialization
                 return;
             }
-
-            // Only initialize if we have a token
-            if (!GITHUB_TOKEN) {
-                return;
-            }
+            
+            // Set token from URL parameter
+            GITHUB_TOKEN = token;
 
             // Get references to DOM elements
             const titleInput = document.getElementById('titleInput');
@@ -71,31 +71,13 @@
             const REPO_NAME = 'inputoutput-tool';
             const FILE_PATH = 'posts.json';
 
-            // Clear posts function (one-time use)
-            async function clearPosts() {
-                try {
-                    console.log('Clearing posts...');
-                    // First get the current file info to get the SHA
-                    const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
-                        headers: {
-                            'Authorization': `token ${GITHUB_TOKEN}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        console.error('GitHub API response:', response.status, response.statusText);
-                        const errorText = await response.text();
-                        console.error('Error details:', errorText);
-                        throw new Error(`GitHub API error: ${response.status} ${response.statusText}\nDetails: ${errorText}`);
-                    }
-                    
-                    const data = await response.json();
-                    const fileSHA = data.sha;
-                    
             // Get GitHub file content
             async function getGitHubFileContent() {
                 try {
+                    if (!GITHUB_TOKEN) {
+                        throw new Error('No GitHub token available');
+                    }
+                    
                     console.log('Fetching posts from GitHub...');
                     const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
                         headers: {
@@ -147,6 +129,11 @@
             postButton.addEventListener('click', async function() {
                 const title = titleInput.value.trim();
                 const content = postInput.value.trim();
+
+                if (!GITHUB_TOKEN) {
+                    alert('No GitHub token available. Please refresh the page and enter your token.');
+                    return;
+                }
 
                 if (title && content) {
                     try {
@@ -220,6 +207,11 @@
 
             // Load posts function
             function loadPosts() {
+                if (!GITHUB_TOKEN) {
+                    alert('No GitHub token available. Please refresh the page and enter your token.');
+                    return;
+                }
+                
                 getGitHubFileContent().then(result => {
                     const posts = result.posts || [];
                     postsSection.innerHTML = '';
@@ -238,6 +230,15 @@
                     alert('Failed to load posts. Please try again.');
                 });
             }
+
+            // Load posts when page loads
+            window.onload = function() {
+                if (!GITHUB_TOKEN) {
+                    alert('No GitHub token available. Please refresh the page and enter your token.');
+                    return;
+                }
+                loadPosts();
+            };
         }
 
         // Handle token submission
@@ -251,19 +252,8 @@
         }
 
         // Initialize the app
-        // Get references to DOM elements
-        const titleInput = document.getElementById('titleInput');
-        const postInput = document.getElementById('postInput');
-        const postButton = document.getElementById('postButton');
-        const postsSection = document.getElementById('postsSection');
-
-        // GitHub API configuration
-        const REPO_OWNER = 'bmarashi';
-        const REPO_NAME = 'inputoutput-tool';
-        const FILE_PATH = 'posts.json';
-
-        // Get GitHub file content
-        async function getGitHubFileContent() {
+        initApp();
+    </script>
             try {
                 console.log('Fetching posts from GitHub...');
                 const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
