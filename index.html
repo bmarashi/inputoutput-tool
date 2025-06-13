@@ -93,58 +93,6 @@
                     const data = await response.json();
                     const fileSHA = data.sha;
                     
-                    // Delete the file
-                    const deleteResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `token ${GITHUB_TOKEN}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        },
-                        body: JSON.stringify({
-                            message: 'Delete posts file',
-                            sha: fileSHA
-                        })
-                    });
-                    
-                    if (!deleteResponse.ok) {
-                        console.error('Failed to delete file:', deleteResponse.status, await deleteResponse.text());
-                        throw new Error('Failed to delete posts file');
-                    }
-                    
-                    // Create new empty file
-                    const createResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `token ${GITHUB_TOKEN}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        },
-                        body: JSON.stringify({
-                            message: 'Create empty posts file',
-                            content: btoa(JSON.stringify([])),
-                            sha: '0000000000000000000000000000000000000000'
-                        })
-                    });
-                    
-                    if (!createResponse.ok) {
-                        console.error('Failed to create empty file:', createResponse.status, await createResponse.text());
-                        throw new Error('Failed to create empty posts file');
-                    }
-                    
-                    console.log('Posts cleared successfully');
-                    return [];
-                } catch (error) {
-                    console.error('Error clearing posts:', error);
-                    throw error;
-                }
-            }
-
-            // Clear posts one time
-            clearPosts().then(() => {
-                console.log('Posts cleared successfully');
-            }).catch(error => {
-                console.error('Failed to clear posts:', error);
-            });
-
             // Get GitHub file content
             async function getGitHubFileContent() {
                 try {
@@ -270,11 +218,6 @@
                 }
             });
 
-            // Load posts when page loads
-            window.onload = function() {
-                loadPosts();
-            };
-
             // Load posts function
             function loadPosts() {
                 getGitHubFileContent().then(result => {
@@ -297,17 +240,17 @@
             }
         }
 
-        // Clear posts and initialize the app
-        async function clearAndInit() {
-            try {
-                await clearPosts();
-                initApp();
-            } catch (error) {
-                console.error('Error clearing posts:', error);
-                alert('Failed to clear posts. Please try again.');
+        // Handle token submission
+        function handleTokenSubmit() {
+            const tokenInput = document.getElementById('tokenInput');
+            if (tokenInput.value) {
+                // Save token in URL
+                const newUrl = `${window.location.pathname}?token=${encodeURIComponent(tokenInput.value)}`;
+                window.location.href = newUrl;
             }
         }
-        
+
+        // Initialize the app
         // Get references to DOM elements
         const titleInput = document.getElementById('titleInput');
         const postInput = document.getElementById('postInput');
@@ -469,6 +412,20 @@
         window.onload = function() {
             loadPosts();
         };
-    </script>
+    }
+
+    // Handle token submission
+    function handleTokenSubmit() {
+        const tokenInput = document.getElementById('tokenInput');
+        if (tokenInput.value) {
+            // Save token in URL
+            const newUrl = `${window.location.pathname}?token=${encodeURIComponent(tokenInput.value)}`;
+            window.location.href = newUrl;
+        }
+    }
+
+    // Initialize the app
+    initApp();
+</script>
 </body>
 </html>
