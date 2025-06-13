@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Blog App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="site-title">inputoutput.xyz</h1>
+        <div class="input-section">
+            <input type="text" id="titleInput" class="title-input" placeholder="Title">
+            <textarea id="postInput" class="post-input" placeholder="Write your post here"></textarea>
+            <div class="button-container">
+                <button id="postButton" class="post-button">Post</button>
+            </div>
+        </div>
+        
+        <div id="postsSection" class="posts-section">
+            <!-- Posts will be added here dynamically -->
+        </div>
+    </div>
+
+    <script>
+        // Get references to DOM elements
+        const titleInput = document.getElementById('titleInput');
+        const postInput = document.getElementById('postInput');
+        const postButton = document.getElementById('postButton');
+        const postsSection = document.getElementById('postsSection');
+
+        // Load existing posts when page loads
+        window.onload = function() {
+            loadPosts();
+        };
+
+        // Handle post button click
+        postButton.addEventListener('click', function() {
+            const title = titleInput.value.trim();
+            const content = postInput.value.trim();
+
+            if (title && content) {
+                // Send post to server
+                fetch('/api/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title, content })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Clear inputs
+                    titleInput.value = '';
+                    postInput.value = '';
+                    // Update display
+                    loadPosts();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to post. Please try again.');
+                });
+            }
+        });
+
+        function loadPosts() {
+            fetch('/api/posts')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(posts => {
+                    postsSection.innerHTML = '';
+                    posts.forEach(post => {
+                        const postElement = document.createElement('div');
+                        postElement.className = 'post';
+                        postElement.innerHTML = `
+                            <h2>${post.title}</h2>
+                            <p class="date">${post.date}</p>
+                            <p class="post-content">${post.content}</p>
+                        `;
+                        postsSection.appendChild(postElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to load posts. Please refresh the page.');
+                });
+        }
+    </script>
+</body>
+</html>
