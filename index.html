@@ -23,47 +23,42 @@
     </div>
 
     <script>
-        // Check for token first
-        const urlParams = new URLSearchParams(window.location.search);
-        const GITHUB_TOKEN = urlParams.get('token');
-
-        if (!GITHUB_TOKEN) {
-            // Create token input form
-            const tokenContainer = document.createElement('div');
-            tokenContainer.className = 'token-container';
-            tokenContainer.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);';
-            tokenContainer.innerHTML = `
-                <h2>Enter GitHub Token</h2>
-                <p style="margin-bottom: 10px;">Please provide your GitHub Personal Access Token with repo scope:</p>
-                <input type="password" id="tokenInput" placeholder="GitHub Token" style="width: 100%; padding: 8px; margin-bottom: 10px;">
-                <button id="tokenSubmit" style="width: 100%; padding: 8px; background: #808080; color: white; border: none; cursor: pointer;">Submit Token</button>
-            `;
-            
-            document.body.insertBefore(tokenContainer, document.body.firstChild);
-            
-            const tokenSubmit = document.getElementById('tokenSubmit');
-            tokenSubmit.addEventListener('click', () => {
-                const token = document.getElementById('tokenInput').value;
-                if (token) {
-                    window.location.href = window.location.pathname + '?token=' + encodeURIComponent(token);
-                }
-            });
-            
-            return;
-        }
-
-        // Initialize app
+        // Main initialization function
         async function initApp() {
+            // Check for token first
+            const urlParams = new URLSearchParams(window.location.search);
+            const GITHUB_TOKEN = urlParams.get('token');
+
+            if (!GITHUB_TOKEN) {
+                // Create token input form
+                const tokenContainer = document.createElement('div');
+                tokenContainer.className = 'token-container';
+                tokenContainer.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);';
+                tokenContainer.innerHTML = `
+                    <h2>Enter GitHub Token</h2>
+                    <p style="margin-bottom: 10px;">Please provide your GitHub Personal Access Token with repo scope:</p>
+                    <input type="password" id="tokenInput" placeholder="GitHub Token" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                    <button id="tokenSubmit" style="width: 100%; padding: 8px; background: #808080; color: white; border: none; cursor: pointer;">Submit Token</button>
+                `;
+                
+                document.body.insertBefore(tokenContainer, document.body.firstChild);
+                
+                const tokenSubmit = document.getElementById('tokenSubmit');
+                tokenSubmit.addEventListener('click', () => {
+                    const token = document.getElementById('tokenInput').value;
+                    if (token) {
+                        window.location.href = window.location.pathname + '?token=' + encodeURIComponent(token);
+                    }
+                });
+                
+                return;
+            }
+
             // Get references to DOM elements
             const titleInput = document.getElementById('titleInput');
             const postInput = document.getElementById('postInput');
             const postButton = document.getElementById('postButton');
             const postsSection = document.getElementById('postsSection');
-
-            // Load existing posts when page loads
-            window.onload = function() {
-                loadPosts();
-            };
 
             // GitHub API configuration
             const REPO_OWNER = 'bmarashi';
@@ -176,6 +171,12 @@
                 }
             });
 
+            // Load posts when page loads
+            window.onload = function() {
+                loadPosts();
+            };
+
+            // Load posts function
             function loadPosts() {
                 getGitHubFileContent().then(posts => {
                     postsSection.innerHTML = '';
@@ -194,10 +195,10 @@
                     alert('Failed to load posts. Please try again.');
                 });
             }
-
-            // Initialize the app
-            initApp();
         }
+
+        // Initialize the app
+        initApp();
     </script>
 </body>
 </html>
