@@ -176,22 +176,78 @@
                         posts.forEach(post => {
                             const postElement = document.createElement('div');
                             postElement.className = 'post';
-                            postElement.innerHTML = `
-                                <h2>${post.title}</h2>
-                                <p class="date">${new Date(post.date).toLocaleDateString()}</p>
-                                <p class="post-content">${post.content}</p>
-                            `;
+                            
+                            // Create title and date elements
+                            const titleElement = document.createElement('h2');
+                            titleElement.textContent = post.title;
+                            
+                            const dateElement = document.createElement('p');
+                            dateElement.className = 'date';
+                            dateElement.textContent = new Date(post.date).toLocaleDateString();
+                            
+                            // Create content element and process links
+                            const contentElement = document.createElement('div');
+                            contentElement.className = 'post-content';
+                            contentElement.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
+                            
+                            // Split content by URLs and format them
+                            const contentParts = post.content.split(/(https?:\/\/[^\s]+)/g);
+                            
+                            // Process each part
+                            let currentText = '';
+                            contentParts.forEach(part => {
+                                if (part.startsWith('http')) {
+                                    // Create link element for URLs
+                                    const link = document.createElement('a');
+                                    link.href = part;
+                                    link.textContent = part;
+                                    link.target = '_blank';
+                                    link.rel = 'noopener noreferrer';
+                                    link.style.cssText = 'display: block; margin-left: 0;';
+                                    
+                                    // Create container for current text and link
+                                    const container = document.createElement('div');
+                                    container.style.cssText = 'display: flex; flex-direction: column; gap: 4px;';
+                                    
+                                    // Add current text if it exists
+                                    if (currentText.trim()) {
+                                        const text = document.createTextNode(currentText.trim());
+                                        container.appendChild(text);
+                                    }
+                                    
+                                    // Add the link
+                                    container.appendChild(link);
+                                    contentElement.appendChild(container);
+                                    
+                                    // Reset current text
+                                    currentText = '';
+                                } else {
+                                    // Add to current text
+                                    currentText += part;
+                                }
+                            });
+                            
+                            // Add any remaining text
+                            if (currentText.trim()) {
+                                const text = document.createTextNode(currentText.trim());
+                                contentElement.appendChild(text);
+                            }
+                            
+                            // Append all elements to the post
+                            postElement.appendChild(titleElement);
+                            postElement.appendChild(dateElement);
+                            postElement.appendChild(contentElement);
+                            
                             postsSection.appendChild(postElement);
                         });
                     }).catch(error => {
+                        console.error('Error loading posts:', error);
                         alert('Failed to load posts. Please try again.');
                     });
                 }
 
                 // Load posts when page loads
-                window.onload = function() {
-                    loadPosts();
-                };
+                loadPosts();
             } catch (error) {
                 alert('Failed to initialize app. Please check the browser console for more details.');
             }
@@ -199,10 +255,9 @@
 
         // Handle token submission
         function handleTokenSubmit() {
-            const tokenInput = document.getElementById('tokenInput');
-            if (tokenInput.value) {
-                const newUrl = `${window.location.pathname}?token=${encodeURIComponent(tokenInput.value)}`;
-                window.location.href = newUrl;
+            const token = document.getElementById('tokenInput').value;
+            if (token) {
+                window.location.href = `?token=${token}`;
             }
         }
 
